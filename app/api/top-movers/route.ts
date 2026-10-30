@@ -1,8 +1,9 @@
 import type { NextRequest } from "next/server";
-import { MARKETS, type Market, type Mover, type TopMoversResponse } from "@/lib/types";
+import { MARKETS, type DataSource, type Market, type Mover, type TopMoversResponse } from "@/lib/types";
 import { UNIVERSE } from "@/lib/universe";
 import type { MonthlySeries } from "@/lib/types";
 import { getMonthly, mapLimit } from "@/lib/market-data";
+import { getUsdKrwMonthly, needsKrwConversion, toKrwSeries } from "@/lib/fx";
 import { mockSeries } from "@/lib/mock";
 import { FIRST_YEAR, monthStart, nowYM, parseYM, prevYM, ymKey } from "@/lib/dates";
 import { badRequest, json } from "@/lib/http";
@@ -21,12 +22,17 @@ export async function GET(req: NextRequest) {
   const live = settled.filter((r) => r.status === "fulfilled").length;
 
   // If Yahoo is entirely unreachable, rank mock data instead of returning an empty list.
-  const source = live > 0 ? "yahoo" : "mock";
+  let source: DataSource = live > 0 ? "yahoo" : "mock";
   const seriesFor = (i: number): MonthlySeries | null => {
     const r = settled[i];
     if (r.status === "fulfilled") return r.value;
     return source === "mock" ? mockSeries(universe[i].symbol) : null;
   };
+
+  // Overseas markets: convert USD prices with that month's USD/KRW so ranks reflect KRW returns.
+  const needsFx = market === "NASDAQ" || market === "CRYPTO";
+  const fx = needsFx ? await getUsdKrwMonthly() : null;
+  if (fx?.source === "mock") source = "mock";
 
   const ymStr = ymKey(ym.year, ym.month);
   const p = prevYM(ym.year, ym.month);
@@ -34,8 +40,10 @@ export async function GET(req: NextRequest) {
 
   const ranked: Omit<Mover, "rank">[] = [];
   universe.forEach((entry, i) => {
-    const series = seriesFor(i);
+    let series = seriesFor(i);
     if (!series) return;
+    if (fx && needsKrwConversion(series.currency)) series = toKrwSeries(series, fx.rates);
+
     const idx = series.bars.findIndex((b) => b.time === `${ymStr}-01`);
     if (idx < 0) return;
     const bar = series.bars[idx];

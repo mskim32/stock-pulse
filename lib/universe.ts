@@ -65,6 +65,22 @@ const nasdaq: [string, string][] = [
   ["ROST", "Ross Stores"], ["FAST", "Fastenal"], ["EA", "Electronic Arts"],
 ];
 
+/** Yahoo Finance crypto quote symbols (base-quote). */
+const crypto: [string, string][] = [
+  ["BTC-USD", "Bitcoin"], ["ETH-USD", "Ethereum"], ["BNB-USD", "BNB"],
+  ["SOL-USD", "Solana"], ["XRP-USD", "XRP"], ["ADA-USD", "Cardano"],
+  ["DOGE-USD", "Dogecoin"], ["TON-USD", "Toncoin"], ["AVAX-USD", "Avalanche"],
+  ["SHIB-USD", "Shiba Inu"], ["DOT-USD", "Polkadot"], ["LINK-USD", "Chainlink"],
+  ["TRX-USD", "TRON"], ["POL-USD", "Polygon"], ["BCH-USD", "Bitcoin Cash"],
+  ["NEAR-USD", "NEAR Protocol"], ["LTC-USD", "Litecoin"], ["UNI-USD", "Uniswap"],
+  ["ICP-USD", "Internet Computer"], ["APT-USD", "Aptos"], ["ATOM-USD", "Cosmos"],
+  ["ETC-USD", "Ethereum Classic"], ["FIL-USD", "Filecoin"], ["ARB-USD", "Arbitrum"],
+  ["OP-USD", "Optimism"], ["SUI-USD", "Sui"], ["PEPE-USD", "Pepe"],
+  ["AAVE-USD", "Aave"], ["RENDER-USD", "Render"], ["INJ-USD", "Injective"],
+  ["SEI-USD", "Sei"], ["IMX-USD", "Immutable"], ["STX-USD", "Stacks"],
+  ["MKR-USD", "Maker"], ["GRT-USD", "The Graph"], ["ALGO-USD", "Algorand"],
+];
+
 const suffix = (list: [string, string][], sfx: string): UniverseEntry[] =>
   list.map(([code, name]) => ({ symbol: code + sfx, name }));
 
@@ -72,6 +88,7 @@ export const UNIVERSE: Record<Market, UniverseEntry[]> = {
   KOSPI: suffix(kospi, ".KS"),
   KOSDAQ: suffix(kosdaq, ".KQ"),
   NASDAQ: suffix(nasdaq, ""),
+  CRYPTO: suffix(crypto, ""),
 };
 
 export const FUTURES_SYMBOL = "NQ=F";
@@ -86,9 +103,14 @@ export function lookup(symbol: string) {
   return bySymbol.get(symbol.toUpperCase());
 }
 
+const CRYPTO_QUOTE = /-(USD|USDT|USDC|KRW|EUR|BTC|ETH)$/;
+
 export function marketOf(symbol: string): Market {
+  const known = lookup(symbol);
+  if (known) return known.market;
   if (symbol.endsWith(".KS")) return "KOSPI";
   if (symbol.endsWith(".KQ")) return "KOSDAQ";
+  if (CRYPTO_QUOTE.test(symbol)) return "CRYPTO";
   return "NASDAQ";
 }
 

@@ -72,7 +72,7 @@ export async function fetchDaily(symbol: string, year: number, month: number): P
   return [...byDay].sort(([a], [b]) => a.localeCompare(b)).map(([time, value]) => ({ time, value }));
 }
 
-const SEARCH_TYPES = new Set(["EQUITY", "ETF", "FUTURE", "INDEX"]);
+const SEARCH_TYPES = new Set(["EQUITY", "ETF", "FUTURE", "INDEX", "CRYPTOCURRENCY"]);
 
 export async function searchSymbols(query: string): Promise<SearchItem[]> {
   const res = await yf.search(query, { quotesCount: 10, newsCount: 0 });

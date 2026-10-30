@@ -42,10 +42,15 @@ export function mockSeries(symbol: string): MonthlySeries {
   const listedYm = MOCK_LISTED[symbol] ?? null;
   const all = mockMonthly(symbol);
   const bars = listedYm ? all.filter((b) => b.time.slice(0, 7) >= listedYm) : all;
+  const isFx = symbol === "KRW=X" || symbol === "USDKRW=X";
   return {
     bars,
-    currency: marketOf(symbol) === "NASDAQ" || symbol.endsWith("=F") ? "USD" : "KRW",
-    name: lookup(symbol)?.name,
+    currency: (() => {
+      if (isFx || /\.(KS|KQ)$/.test(symbol)) return "KRW";
+      const m = marketOf(symbol);
+      return m === "NASDAQ" || m === "CRYPTO" || symbol.endsWith("=F") ? "USD" : "KRW";
+    })(),
+    name: isFx ? "USD/KRW" : lookup(symbol)?.name,
     listedYm,
     // Pretend pre-2002 listings closed Dec 2001 at their Jan 2002 open.
     baseClose: listedYm ? null : all[0].open,
@@ -54,10 +59,24 @@ export function mockSeries(symbol: string): MonthlySeries {
 
 export function mockMonthly(symbol: string): Candle[] {
   const rand = rng(hash(symbol));
+  const isFx = symbol === "KRW=X" || symbol === "USDKRW=X";
   const korean = /\.(KS|KQ)$/.test(symbol);
-  const vol = symbol.endsWith(".KQ") ? 0.16 : symbol === "NQ=F" ? 0.055 : 0.1;
-  const drift = 0.006 + (rand() - 0.5) * 0.01;
-  let price = symbol === "NQ=F" ? 1000 : korean ? 5000 + rand() * 60000 : 10 + rand() * 90;
+  const crypto = marketOf(symbol) === "CRYPTO";
+  const vol = isFx ? 0.025 : crypto ? 0.22 : symbol.endsWith(".KQ") ? 0.16 : symbol === "NQ=F" ? 0.055 : 0.1;
+  const drift = isFx ? 0.001 : 0.006 + (rand() - 0.5) * 0.01;
+  let price = isFx
+    ? 1200 + rand() * 200
+    : symbol === "NQ=F"
+      ? 1000
+      : crypto
+        ? symbol.startsWith("BTC")
+          ? 20_000 + rand() * 40_000
+          : symbol.startsWith("ETH")
+            ? 1_000 + rand() * 2_000
+            : 0.01 + rand() * 50
+        : korean
+          ? 5000 + rand() * 60000
+          : 10 + rand() * 90;
 
   const { year: endY, month: endM } = nowYM();
   const bars: Candle[] = [];
@@ -68,7 +87,8 @@ export function mockMonthly(symbol: string): Candle[] {
       const close = Math.max(open * Math.exp(drift + vol * gaussian(rand)), 0.01);
       const high = Math.max(open, close) * (1 + rand() * vol * 0.6);
       const low = Math.min(open, close) * (1 - rand() * vol * 0.6);
-      const round = (v: number) => (korean ? Math.round(v) : Math.round(v * 100) / 100);
+      const round = (v: number) =>
+        isFx || korean ? Math.round(v) : Math.round(v * 100) / 100;
       bars.push({ time: monthStart(y, m), open: round(open), high: round(high), low: round(low), close: round(close) });
       price = close;
     }

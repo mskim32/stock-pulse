@@ -75,6 +75,11 @@ export default function TopMoversList({ market, year, month }: Props) {
           ))}
         </ol>
       )}
+      {(market === "NASDAQ" || market === "CRYPTO") && (
+        <p className="mt-2 px-1 text-[11px] leading-relaxed text-dim">
+          가격·수익률은 해당 월 종가 기준 USD/KRW 환율로 환산한 원화입니다.
+        </p>
+      )}
       {data?.items.some((i) => i.isNewListing) && (
         <p className="mt-2 px-1 text-[11px] leading-relaxed text-dim">
           <NewListingBadge /> 상장 첫 달은 첫 거래일 시가 대비 월말 종가 수익률입니다 (공모가 기준 아님).

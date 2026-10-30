@@ -1,17 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import clsx from "clsx";
 import type { StockHistoryResponse } from "@/lib/types";
 import { useFetch } from "@/lib/use-fetch";
+import { useFavorites } from "@/lib/favorites";
 import { displayTicker, formatPct, formatPrice, toneClass } from "@/lib/format";
 import { marketOf } from "@/lib/universe";
 import { MARKET_LABEL } from "./MarketTabs";
 import CandleChart from "./CandleChart";
 import ReturnHeatmap from "./ReturnHeatmap";
 import SourceBadge from "./SourceBadge";
+import FavoriteButton from "./FavoriteButton";
 
 type Timeframe = "monthly" | "yearly";
 
@@ -19,6 +21,11 @@ export default function StockDetail({ symbol }: { symbol: string }) {
   const router = useRouter();
   const [timeframe, setTimeframe] = useState<Timeframe>("monthly");
   const { data, error, loading } = useFetch<StockHistoryResponse>(`/api/stock/${encodeURIComponent(symbol)}`);
+  const { rename } = useFavorites();
+
+  useEffect(() => {
+    if (data?.name) rename(symbol, data.name);
+  }, [data?.name, rename, symbol]);
 
   const stats = useMemo(() => {
     if (!data || data.monthly.length < 2) return null;
@@ -53,9 +60,10 @@ export default function StockDetail({ symbol }: { symbol: string }) {
             {data?.listedYm && ` · ${data.listedYm.replace("-", ".")} 상장`}
           </p>
         </div>
-        <span className="ml-auto pr-2">
+        <div className="ml-auto flex items-center gap-0.5 pr-1">
           <SourceBadge source={data?.source} />
-        </span>
+          <FavoriteButton symbol={symbol} name={data?.name} />
+        </div>
       </header>
 
       <div className="space-y-4 px-4 pt-2">

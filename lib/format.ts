@@ -1,12 +1,15 @@
 export function formatPrice(value: number | null | undefined, currency = "USD") {
   if (value == null) return "–";
   const krw = currency === "KRW";
-  return (
-    value.toLocaleString(krw ? "ko-KR" : "en-US", {
-      minimumFractionDigits: krw ? 0 : 2,
-      maximumFractionDigits: krw ? 0 : 2,
-    }) + (krw ? "원" : "")
-  );
+  if (krw) {
+    return value.toLocaleString("ko-KR", { maximumFractionDigits: 0 }) + "원";
+  }
+  // Crypto / FX: more decimals for sub-dollar quotes, fewer for large notionals.
+  const digits = value >= 1000 ? 2 : value >= 1 ? 2 : value >= 0.01 ? 4 : 6;
+  return value.toLocaleString("en-US", {
+    minimumFractionDigits: Math.min(2, digits),
+    maximumFractionDigits: digits,
+  });
 }
 
 export function formatPct(value: number | null | undefined, digits = 2) {
@@ -19,8 +22,9 @@ export function toneClass(value: number | null | undefined) {
   return value > 0 ? "text-up" : "text-down";
 }
 
-/** Strip the exchange suffix for display: 005930.KS → 005930 */
-export const displayTicker = (symbol: string) => symbol.replace(/\.(KS|KQ)$/, "");
+/** Strip exchange / quote suffixes for display: 005930.KS → 005930, BTC-USD → BTC */
+export const displayTicker = (symbol: string) =>
+  symbol.replace(/\.(KS|KQ)$/, "").replace(/-(USD|USDT|USDC|KRW|EUR)$/, "");
 
 /** Heatmap cell background: red/blue with opacity scaled by magnitude (saturates at ±20%). */
 export function heatColor(pct: number | null) {

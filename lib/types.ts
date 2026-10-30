@@ -1,5 +1,5 @@
-export type Market = "KOSPI" | "KOSDAQ" | "NASDAQ";
-export const MARKETS: Market[] = ["KOSPI", "KOSDAQ", "NASDAQ"];
+export type Market = "KOSPI" | "KOSDAQ" | "NASDAQ" | "CRYPTO";
+export const MARKETS: Market[] = ["KOSPI", "KOSDAQ", "NASDAQ", "CRYPTO"];
 
 /** Where a response's numbers came from. "mock" means Yahoo was unreachable or disabled. */
 export type DataSource = "yahoo" | "mock";
@@ -59,6 +59,8 @@ export interface FuturesResponse {
   close: number | null;
   prevClose: number | null;
   changePct: number | null;
+  /** Display currency after FX conversion (KRW for overseas). */
+  currency: string;
   /** Daily closes inside the selected month, for the mini chart. */
   daily: SeriesPoint[];
   /** True when the selected month is the current, still-running month. */

@@ -37,13 +37,16 @@ export default function FuturesBanner({ year, month }: { year: number; month: nu
           ) : (
             <>
               <p className={clsx("text-[28px] font-bold leading-none tracking-tight", loading && "opacity-50")}>
-                {formatPrice(data.close, "USD")}
+                {formatPrice(data.close, data.currency ?? "KRW")}
               </p>
               <p className={clsx("mt-2 flex items-center gap-1 text-sm font-semibold", toneClass(data.changePct))}>
                 {up ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
                 {formatPct(data.changePct)}
+                <span className="font-normal text-dim">원화</span>
               </p>
-              <p className="mt-1 whitespace-nowrap text-xs text-dim">전월 {formatPrice(data.prevClose, "USD")}</p>
+              <p className="mt-1 whitespace-nowrap text-xs text-dim">
+                전월 {formatPrice(data.prevClose, data.currency ?? "KRW")}
+              </p>
             </>
           )}
         </div>

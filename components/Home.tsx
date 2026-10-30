@@ -10,6 +10,7 @@ import FuturesBanner from "./FuturesBanner";
 import MarketTabs from "./MarketTabs";
 import TopMoversList from "./TopMoversList";
 import SearchBar from "./SearchBar";
+import FavoritesSection from "./FavoritesSection";
 
 /** Selection lives in the URL (?y=&m=&tab=) so "back" from a stock page restores it. */
 function useSelection() {
@@ -45,13 +46,14 @@ export default function Home() {
         <span className="grid size-8 place-items-center rounded-lg bg-accent/20 text-accent">
           <Activity size={18} />
         </span>
-        <h1 className="text-lg font-bold">Stock Pulse</h1>
+        <h1 className="text-lg font-bold tracking-tight">나 혼자만 상한가</h1>
         <span className="ml-auto text-xs text-dim">2002 – {nowYM().year}</span>
       </header>
 
       <SearchBar />
+      <FavoritesSection />
       <YearMonthPicker year={year} month={month} onChange={(y, m) => update({ y, m })} />
-      <FuturesBanner year={year} month={month} />
+      {market !== "CRYPTO" && <FuturesBanner year={year} month={month} />}
       <MarketTabs value={market} onChange={(tab) => update({ tab: tab.toLowerCase() })} />
       <TopMoversList market={market} year={year} month={month} />
 

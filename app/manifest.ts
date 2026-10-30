@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Stock Pulse",
-    short_name: "Stock Pulse",
+    name: "나 혼자만 상한가",
+    short_name: "상한가",
     description: "월별 상승률 Top 5 · 나스닥 100 선물 · 수익률 히트맵",
     start_url: "/",
     display: "standalone",
